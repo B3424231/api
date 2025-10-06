@@ -1,0 +1,25 @@
+{% extends "rest_framework/base.html" %}
+
+{% block style %}
+{{ block.super }}
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Apply Poppins font to all REST framework elements */
+* {
+    font-family: 'Poppins', sans-serif !important;
+}
+
+body, .navbar, .navbar-brand, .btn, .form-control, .card, .card-header, .card-body,
+h1, h2, h3, h4, h5, h6, p, span, div, label, input, textarea, select, option,
+.nav-link, .dropdown-item, .alert, .badge, .table, .table th, .table td {
+    font-family: 'Poppins', sans-serif !important;
+}
+</style>
+{% endblock %}
+
+{% block branding %}
+  <a class="navbar-brand" href="{% url 'dashboard' %}" style="margin-right:12px; font-family: 'Poppins', sans-serif !important;">&larr; Back to System</a>
+  <span class="navbar-brand" style="font-family: 'Poppins', sans-serif !important;">Django REST framework</span>
+{% endblock %}
+
+

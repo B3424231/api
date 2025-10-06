@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<style>
+    .profile-card { color: var(--dark-text-secondary); }
+    .profile-card strong { color: var(--dark-text-accent); }
+    .profile-section-title { color: var(--dark-text-secondary); font-weight: 700; }
+    
+    .profile-picture-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .profile-picture-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .profile-picture-large:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+    }
+</style>
+<div class="text-center mb-4">
+    <h2>Your Profile</h2>
+    {% if user.facebook_picture_url %}
+        <div class="profile-picture-container mb-3">
+            <img src="{{ user.facebook_picture_url }}" alt="{{ user.username }}'s profile picture" class="profile-picture-large">
+        </div>
+    {% endif %}
+</div>
+
+<div class="card profile-card">
+    <div class="card-body">
+        <div><strong>Username:</strong> {{ user_obj.username }}</div>
+        <div><strong>Email:</strong> {{ user_obj.email|default:'-' }}</div>
+        <div><strong>First name:</strong> {{ user_obj.first_name|default:'-' }}</div>
+        <div><strong>Last name:</strong> {{ user_obj.last_name|default:'-' }}</div>
+        <hr>
+        <div class="mb-2 profile-section-title">Facebook Information</div>
+        <div><strong>Facebook ID:</strong> {{ user_obj.facebook_id|default:'-' }}</div>
+        <div><strong>Facebook Email:</strong> {{ user_obj.facebook_email|default:'-' }}</div>
+    </div>
+</div>
+{% endblock %}

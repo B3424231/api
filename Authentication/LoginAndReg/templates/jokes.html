@@ -1,0 +1,523 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fa-regular fa-face-laugh-squint me-2" style="color: var(--primary-color);"></i>
+                    Random Jokes Generator
+                </h2>
+                <div class="d-flex gap-2">
+                    <button id="generateJoke" class="btn btn-primary">
+                        <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Generate Joke
+                    </button>
+                    <button id="shareJoke" class="btn btn-outline-secondary" disabled>
+                        <i class="fa-solid fa-share-nodes me-2"></i>Share
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Joke Display Card -->
+        <div class="col-lg-8 col-md-7 mb-4">
+            <div class="card shadow-sm border-0 joke-main-card" style="min-height: 400px;">
+                <div class="card-header joke-card-header text-white">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-quote-left me-2"></i>Your Joke
+                    </h5>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <div id="jokeContainer" class="text-center">
+                        <div id="loadingSpinner" class="d-none">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Fetching a funny joke...</p>
+                        </div>
+                        <div id="jokeContent" class="d-none">
+                            <div class="joke-display">
+                                <i class="fa-solid fa-quote-left joke-quote-left"></i>
+                                <p id="jokeText" class="mb-0"></p>
+                                <i class="fa-solid fa-quote-right joke-quote-right"></i>
+                            </div>
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="fa-regular fa-face-smile me-1"></i>
+                                    Click "Generate Joke" for a new one!
+                                </small>
+                            </div>
+                        </div>
+                        <div id="welcomeMessage">
+                            <div class="text-center py-5">
+                                <i class="fa-regular fa-face-laugh-beam fa-4x mb-3" style="color: rgba(255, 255, 255, 0.8);"></i>
+                                <h4 style="color: rgba(255, 255, 255, 0.95) !important;">Ready for some laughs?</h4>
+                                <p style="color: rgba(255, 255, 255, 0.8) !important;">Click the "Generate Joke" button to get started!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fa-solid fa-circle-info me-1"></i>
+                            Jokes powered by public APIs
+                        </small>
+                        <div id="jokeStats" class="d-none">
+                            <small class="text-muted">
+                            <i class="fa-regular fa-clock me-1"></i>
+                                <span id="jokeTimestamp"></span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- QR Code Display -->
+        <div class="col-lg-4 col-md-5 mb-4">
+            <div class="card shadow-sm border-0 joke-controls-card" style="min-height: 400px;">
+                <div class="card-header joke-controls-header text-white">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-qrcode me-2"></i>QR Code
+                    </h5>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <div id="qrContainer" class="text-center">
+                        <div id="qrPlaceholder">
+                            <i class="fa-solid fa-qrcode fa-4x text-muted mb-3"></i>
+                            <p class="text-muted">QR code will appear here</p>
+                            <small class="text-muted">Generate a joke to see the QR code</small>
+                        </div>
+                        <div id="qrCodeDisplay" class="d-none">
+                            <img id="qrCodeImage" src="" alt="QR Code" class="img-fluid rounded" style="max-width: 200px;">
+                            <p class="mt-2 small text-muted">Scan to share this joke!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-center">
+                        <button id="downloadQR" class="btn btn-sm btn-outline-primary d-none">
+                            <i class="fa-solid fa-download me-1"></i>Download QR
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Joke History -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-clock-rotate-left me-2"></i>Recent Jokes
+                        <button id="clearHistory" class="btn btn-sm btn-outline-danger float-end">
+                            <i class="fa-solid fa-trash me-1"></i>Clear
+                        </button>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="jokeHistory" class="row">
+                        <div class="col-12 text-center text-muted py-4">
+                            <i class="fa-regular fa-clock fa-2x mb-2"></i>
+                            <p>Your joke history will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary-color), #667eea) !important;
+}
+
+.bg-gradient-secondary {
+    background: linear-gradient(135deg, var(--secondary-color), #764ba2) !important;
+}
+
+/* Dashboard-style Cards */
+.card {
+    transition: transform 0.2s ease-in-out;
+    background: var(--card-bg) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--card-border) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 15px 35px var(--shadow);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Light Theme Card Headers */
+.joke-card-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+    backdrop-filter: blur(15px);
+    border: none !important;
+    border-radius: 20px 20px 0 0 !important;
+}
+
+.joke-controls-header {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color)) !important;
+    backdrop-filter: blur(15px);
+    border: none !important;
+    border-radius: 20px 20px 0 0 !important;
+}
+
+/* Dark Theme Card Backgrounds */
+[data-theme="dark"] .joke-main-card {
+    background: linear-gradient(135deg, 
+                rgba(243, 144, 79, 0.08) 0%, 
+                rgba(200, 118, 107, 0.06) 50%, 
+                rgba(59, 67, 113, 0.1) 100%) !important;
+}
+
+[data-theme="dark"] .joke-controls-card {
+    background: linear-gradient(135deg, 
+                rgba(59, 67, 113, 0.08) 0%, 
+                rgba(200, 118, 107, 0.06) 50%, 
+                rgba(243, 144, 79, 0.1) 100%) !important;
+}
+
+[data-theme="dark"] .joke-card-header {
+    background: linear-gradient(135deg, 
+                rgba(243, 144, 79, 0.15), 
+                rgba(59, 67, 113, 0.2)) !important;
+}
+
+[data-theme="dark"] .joke-controls-header {
+    background: linear-gradient(135deg, 
+                rgba(59, 67, 113, 0.15), 
+                rgba(243, 144, 79, 0.2)) !important;
+}
+
+.joke-history-item {
+    background: rgba(243, 144, 79, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.joke-history-item:hover {
+    background: rgba(243, 144, 79, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.joke-history-item p,
+.joke-history-item span,
+.joke-history-item small {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+#jokeText {
+    line-height: 1.8;
+    font-weight: 500;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.95) !important;
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(243, 144, 79, 0.2), rgba(59, 67, 113, 0.2));
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    margin: 10px 0;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+.joke-display {
+    position: relative;
+    margin: 20px 0;
+}
+
+.joke-quote-left, .joke-quote-right {
+    position: absolute;
+    font-size: 2rem;
+    color: var(--primary-color);
+    opacity: 0.3;
+}
+
+.joke-quote-left {
+    top: -10px;
+    left: -10px;
+}
+
+.joke-quote-right {
+    bottom: -10px;
+    right: -10px;
+}
+
+/* Removed per-page alternative font styles */
+
+/* Removed per-page font-family overrides */
+
+.card-body {
+    background: transparent !important;
+}
+
+.card-footer {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(10px);
+    border-radius: 0 0 20px 20px !important;
+}
+
+/* Dark theme base card adjustments */
+[data-theme="dark"] .card {
+    background: rgba(26, 26, 46, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme="dark"] .card-footer {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-top-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Ensure all icons are visible in jokes page */
+i, .fas, .fab, .far, .fal, .fad, .fa {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.btn i, .card-header i, h2 i, h5 i {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+#qrPlaceholder i, #welcomeMessage i, #loadingSpinner i {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.joke-quote-left, .joke-quote-right {
+    color: var(--primary-color) !important;
+}
+
+/* Responsive font sizing */
+@media (max-width: 768px) {
+    #jokeText {
+        font-size: 1rem;
+        padding: 15px;
+    }
+    
+    .joke-quote-left, .joke-quote-right {
+        font-size: 1.5rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const generateBtn = document.getElementById('generateJoke');
+    const shareBtn = document.getElementById('shareJoke');
+    const downloadQRBtn = document.getElementById('downloadQR');
+    const clearHistoryBtn = document.getElementById('clearHistory');
+    
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const jokeContent = document.getElementById('jokeContent');
+    const welcomeMessage = document.getElementById('welcomeMessage');
+    const jokeText = document.getElementById('jokeText');
+    const jokeStats = document.getElementById('jokeStats');
+    const jokeTimestamp = document.getElementById('jokeTimestamp');
+    
+    const qrPlaceholder = document.getElementById('qrPlaceholder');
+    const qrCodeDisplay = document.getElementById('qrCodeDisplay');
+    const qrCodeImage = document.getElementById('qrCodeImage');
+    
+    const jokeHistory = document.getElementById('jokeHistory');
+    
+    let currentJoke = '';
+    let currentQRCode = '';
+    let jokes = JSON.parse(localStorage.getItem('jokeHistory') || '[]');
+    // Remove font style feature
+    let currentFontStyle = 'default';
+    
+    // Load joke history on page load
+    updateJokeHistory();
+    
+    // No per-page font style application
+    
+    generateBtn.addEventListener('click', function() {
+        generateJoke();
+    });
+    
+    shareBtn.addEventListener('click', function() {
+        if (currentJoke) {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Funny Joke',
+                    text: currentJoke,
+                    url: window.location.href
+                });
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(currentJoke).then(() => {
+                    alert('Joke copied to clipboard!');
+                });
+            }
+        }
+    });
+    
+    downloadQRBtn.addEventListener('click', function() {
+        if (currentQRCode) {
+            const link = document.createElement('a');
+            link.download = 'joke-qr-code.png';
+            link.href = currentQRCode;
+            link.click();
+        }
+    });
+    
+    clearHistoryBtn.addEventListener('click', function() {
+        if (confirm('Are you sure you want to clear all joke history?')) {
+            jokes = [];
+            localStorage.removeItem('jokeHistory');
+            updateJokeHistory();
+        }
+    });
+    
+    // Removed font style dropdown logic
+    
+    function generateJoke() {
+        // Show loading state
+        welcomeMessage.classList.add('d-none');
+        jokeContent.classList.add('d-none');
+        loadingSpinner.classList.remove('d-none');
+        generateBtn.disabled = true;
+        
+        // Hide QR code
+        qrCodeDisplay.classList.add('d-none');
+        qrPlaceholder.classList.remove('d-none');
+        downloadQRBtn.classList.add('d-none');
+        
+        fetch('/get-joke/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentJoke = data.joke;
+                    currentQRCode = data.qr_code;
+                    
+                    // Display joke
+                    jokeText.textContent = currentJoke;
+                    jokeTimestamp.textContent = new Date().toLocaleTimeString();
+                    
+                    // No font style application
+                    
+                    // Show joke content
+                    loadingSpinner.classList.add('d-none');
+                    jokeContent.classList.remove('d-none');
+                    jokeStats.classList.remove('d-none');
+                    shareBtn.disabled = false;
+                    
+                    // Display QR code if available
+                    if (currentQRCode) {
+                        qrCodeImage.src = currentQRCode;
+                        qrPlaceholder.classList.add('d-none');
+                        qrCodeDisplay.classList.remove('d-none');
+                        downloadQRBtn.classList.remove('d-none');
+                    }
+                    
+                    // Add to history
+                    addToHistory(currentJoke);
+                    
+                } else {
+                    // Show error
+                    jokeText.textContent = data.joke || 'Sorry, could not fetch a joke right now.';
+                    loadingSpinner.classList.add('d-none');
+                    jokeContent.classList.remove('d-none');
+                    
+                    if (data.qr_code) {
+                        currentQRCode = data.qr_code;
+                        qrCodeImage.src = currentQRCode;
+                        qrPlaceholder.classList.add('d-none');
+                        qrCodeDisplay.classList.remove('d-none');
+                        downloadQRBtn.classList.remove('d-none');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                jokeText.textContent = 'Sorry, something went wrong while fetching the joke.';
+                loadingSpinner.classList.add('d-none');
+                jokeContent.classList.remove('d-none');
+            })
+            .finally(() => {
+                generateBtn.disabled = false;
+            });
+    }
+    
+    function addToHistory(joke) {
+        const jokeEntry = {
+            text: joke,
+            timestamp: new Date().toISOString()
+        };
+        
+        jokes.unshift(jokeEntry);
+        
+        // Keep only last 10 jokes
+        if (jokes.length > 10) {
+            jokes = jokes.slice(0, 10);
+        }
+        
+        localStorage.setItem('jokeHistory', JSON.stringify(jokes));
+        updateJokeHistory();
+        
+        // Save to dashboard tracking if function exists
+        if (typeof window.saveToDashboard === 'function') {
+            window.saveToDashboard('joke', {
+                text: joke
+            });
+        }
+    }
+    
+    function updateJokeHistory() {
+        if (jokes.length === 0) {
+            jokeHistory.innerHTML = `
+                <div class="col-12 text-center text-muted py-4">
+                            <i class="fa-regular fa-clock fa-2x mb-2"></i>
+                    <p>Your joke history will appear here</p>
+                </div>
+            `;
+            return;
+        }
+        
+        jokeHistory.innerHTML = '';
+        
+        jokes.forEach((joke, index) => {
+            const jokeElement = document.createElement('div');
+            jokeElement.className = 'col-md-6 col-lg-4 mb-3';
+            jokeElement.innerHTML = `
+                <div class="joke-history-item">
+                    <p class="mb-2">${joke.text}</p>
+                    <small class="text-muted">
+                        <i class="fa-regular fa-clock me-1"></i>
+                        ${new Date(joke.timestamp).toLocaleString()}
+                    </small>
+                </div>
+            `;
+            jokeHistory.appendChild(jokeElement);
+        });
+    }
+    
+    // Removed applyFontStyle implementation
+});
+
+// Apply smart form text colors after page load
+setTimeout(() => {
+    if (typeof adjustFormTextColors === 'function') {
+        adjustFormTextColors();
+    }
+}, 300);
+</script>
+{% endblock %}

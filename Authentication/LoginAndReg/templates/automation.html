@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Exercise Alert Automation{% endblock %}
+
+{% block content %}
+<style>
+  /* Harmonize logs and controls with dark theme */
+  #auto-logs {
+    background: var(--card-bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 12px;
+    font-family: Consolas, Menlo, Monaco, "Courier New", monospace;
+    line-height: 1.5;
+  }
+  .card { background: var(--card-bg); border: 1px solid var(--card-border); }
+  .card-header { color: var(--text-secondary); }
+  .form-label { color: var(--text-secondary); }
+
+  [data-theme="dark"] #auto-logs { background: rgba(26,26,46,0.9); color:#ffffff; border-color: rgba(255,255,255,0.2); }
+  [data-theme="dark"] .card { background: rgba(26,26,46,0.9); border-color: rgba(255,255,255,0.2); }
+  [data-theme="dark"] .card-header, [data-theme="dark"] .form-label { color: #ffffff; }
+</style>
+<div id="gm-status" class="mb-3"></div>
+<div class="card mt-3">
+  <div class="card-header">Exercise Alert Automation</div>
+  <div class="card-body">
+    <div class="row g-2 align-items-end mb-2">
+      <div class="col-md-6">
+        <label class="form-label">Send exercise alerts to</label>
+        <input id="auto-email" class="form-control" placeholder="recipient@example.com" />
+      </div>
+      <div class="col-md-6 d-flex gap-2">
+        <button id="auto-start" class="btn btn-success">Play</button>
+        <button id="auto-stop" class="btn btn-danger">Pause</button>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Start at (optional)</label>
+        <input id="auto-startat" type="datetime-local" class="form-control" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Interval (minutes)</label>
+        <input id="auto-interval" type="number" class="form-control" value="10" min="1" />
+      </div>
+    </div>
+    <hr>
+    <div class="small text-muted">Logs:</div>
+    <pre id="auto-logs" style="max-height:200px;overflow:auto;margin:0"></pre>
+  </div>
+</div>
+
+<script>
+  // ===== Exercise automation controls =====
+  function getCookie(name){const m=document.cookie.match('(?:^|; )'+name+'=([^;]*)');return m?decodeURIComponent(m[1]):''}
+  async function autoStatus(){
+    const res = await fetch('{% url "automation_status" %}');
+    const js = await res.json();
+    document.getElementById('auto-logs').textContent = (js.logs||[]).join('\n');
+    return js;
+  }
+  document.getElementById('auto-start').addEventListener('click', async ()=>{
+    const to = document.getElementById('auto-email').value.trim();
+    if(!to){ document.getElementById('gm-status').innerHTML='<div class="alert alert-danger">Recipient is required for automation</div>'; return; }
+    const payload = {
+      to_email: to,
+      start_at: document.getElementById('auto-startat').value,
+      interval_minutes: parseInt(document.getElementById('auto-interval').value || '10')
+    };
+    await fetch('{% url "automation_start" %}', {method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')}, body: JSON.stringify(payload)});
+    await autoStatus();
+  });
+  document.getElementById('auto-stop').addEventListener('click', async ()=>{
+    await fetch('{% url "automation_stop" %}', {method:'POST', headers:{'X-CSRFToken':getCookie('csrftoken')}});
+    await autoStatus();
+  });
+  // initial load
+  autoStatus();
+  
+</script>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Django Authentication{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="mb-4">
+        <i class="fa-solid fa-shield-halved text-primary"></i>
+        Django Authentication System
+    </h1>
+    <p class="lead mb-4">Secure authentication with multiple methods</p>
+    
+    <div class="d-grid gap-2">
+        <a href="{% url 'register' %}" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-user-plus"></i> Register
+        </a>
+        <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">
+            <i class="fa-solid fa-right-to-bracket"></i> Login
+        </a>
+        <a href="{% url 'facebook_login' %}" class="btn btn-facebook btn-lg">
+            <i class="fa-brands fa-facebook-f"></i> Login with Facebook
+        </a>
+    </div>
+    
+    <div class="mt-4">
+        <h5>Features:</h5>
+        <ul class="list-unstyled">
+            <li><i class="fa-solid fa-check text-success"></i> Username validation (6+ characters)</li>
+            <li><i class="fa-solid fa-check text-success"></i> Strong password requirements (8+ chars, letters, numbers, special chars)</li>
+            <li><i class="fa-solid fa-check text-success"></i> Account lockout after 3 failed attempts</li>
+            <li><i class="fa-solid fa-check text-success"></i> QR Code authentication (Google Authenticator)</li>
+            <li><i class="fa-solid fa-check text-success"></i> Facebook authentication</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

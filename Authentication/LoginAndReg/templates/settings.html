@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<style>
+    .settings-grid .card { height: 200px; display: flex; }
+    .settings-grid .card .card-body { 
+        display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        gap: 8px; width: 100%;
+    }
+    @media (max-width: 576px) {
+        .settings-grid .card { height: 180px; }
+    }
+</style>
+<style>
+/* Dashboard-style cards for settings */
+.settings-grid .card {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 20px !important;
+    backdrop-filter: blur(10px);
+}
+
+[data-theme="dark"] .settings-grid .card {
+    background: rgba(26, 26, 46, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+</style>
+<div class="text-center mb-4">
+    <h2>Settings</h2>
+    <p class="text-muted">Manage your account and security</p>
+</div>
+
+<div class="row g-3 settings-grid">
+    <div class="col-md-6 col-lg-3">
+        <a class="card text-decoration-none" href="{% url 'profile' %}">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-user fa-2x text-light-pink"></i>
+                <h5 class="mt-2">User Profile</h5>
+                <div class="text-muted small">{{ user_obj.username }}</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a class="card text-decoration-none" href="{% url 'setup_qr' %}">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-qrcode fa-2x text-warning"></i>
+                <h5 class="mt-2">QR Auth</h5>
+                <div class="text-muted small">{% if user_obj.is_qr_enabled %}Enabled{% else %}Disabled{% endif %}</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        {% if request.session.fb_logged_in or user_obj.facebook_id %}
+        <div class="card text-decoration-none" style="cursor: default;">
+            <div class="card-body text-center">
+                <i class="fa-brands fa-facebook fa-2x"></i>
+                <h5 class="mt-2">Facebook</h5>
+                <div class="text-muted small">Logged in via Facebook</div>
+            </div>
+        </div>
+        {% else %}
+        <a class="card text-decoration-none" href="{% url 'facebook_login' %}">
+            <div class="card-body text-center">
+                <i class="fa-brands fa-facebook fa-2x"></i>
+                <h5 class="mt-2">Facebook</h5>
+                <div class="text-muted small">{% if user_obj.facebook_id %}Connected{% else %}Connect{% endif %}</div>
+            </div>
+        </a>
+        {% endif %}
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <a class="card text-decoration-none" href="{% url 'security' %}">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-shield-halved fa-2x text-success"></i>
+                <h5 class="mt-2">Security</h5>
+                <div class="text-muted small">Manage MFA and lockouts</div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

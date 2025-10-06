@@ -1,0 +1,870 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Data Reader{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Header -->
+    <div class="dashboard-header mb-4">
+        <div class="header-content">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="welcome-section">
+                        <div class="user-avatar-container mb-3">
+                            <div class="user-avatar">
+                                {% if user.facebook_picture_url %}
+                                    <img src="{{ user.facebook_picture_url }}" alt="{{ user.username }}'s profile picture" class="profile-picture">
+                                {% else %}
+                                    <i class="fa-regular fa-circle-user"></i>
+                                {% endif %}
+                            </div>
+                            <div class="status-indicator"></div>
+                        </div>
+                        <h1 class="welcome-title mb-2">
+                            <span class="greeting">Welcome back,</span>
+                            <span class="username">{{ user.username }}!</span>
+                        </h1>
+                        <p class="welcome-subtitle mb-0">
+                            <i class="fa-solid fa-chart-line me-2"></i>
+                            Here's what's been happening with your tools
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-badges">
+                        <div class="badge-container">
+                            <div class="status-badge qr-status">
+                                <i class="fa-solid fa-qrcode"></i>
+                                <span>QR: {% if user.is_qr_enabled %}Enabled{% else %}Disabled{% endif %}</span>
+                            </div>
+                            <div class="status-badge attempts-status">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <span>Attempts: {{ user.failed_login_attempts }}/3</span>
+                            </div>
+                            <div class="status-badge active-status">
+                                <i class="fa-solid fa-circle"></i>
+                                <span>Status: Active</span>
+                            </div>
+                        </div>
+                        <div class="time-display">
+                            <i class="fa-regular fa-clock me-2"></i>
+                            <span id="currentTime"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+  </div>
+</div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-2 col-6 mb-3">
+            <div class="stat-card text-center">
+                <div class="stat-icon bg-primary">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <h6 class="mt-2 mb-1">Automation</h6>
+                <span class="text-muted" id="automationCount">0</span>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="stat-card text-center">
+                <div class="stat-icon bg-success">
+                    <i class="fa-solid fa-dumbbell"></i>
+                </div>
+                <h6 class="mt-2 mb-1">Exercises</h6>
+                <span class="text-muted" id="exerciseCount">0</span>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="stat-card text-center">
+                <div class="stat-icon bg-warning">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h6 class="mt-2 mb-1">Crypto</h6>
+                <span class="text-muted" id="cryptoCount">0</span>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="stat-card text-center">
+                <div class="stat-icon bg-info">
+                    <i class="fa-regular fa-face-laugh"></i>
+                </div>
+                <h6 class="mt-2 mb-1">Jokes</h6>
+                <span class="text-muted" id="jokeCount">0</span>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="stat-card text-center">
+                <div class="stat-icon bg-danger">
+                    <i class="fa-regular fa-circle-play"></i>
+                </div>
+                <h6 class="mt-2 mb-1">Anime API</h6>
+                <span class="text-muted" id="animeCount">0</span>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="stat-card text-center">
+                <div class="stat-icon bg-secondary">
+                    <i class="fa-regular fa-clock"></i>
+                </div>
+                <h6 class="mt-2 mb-1">Total</h6>
+                <span class="text-muted" id="totalCount">0</span>
+      </div>
+    </div>
+  </div>
+
+    <!-- Recent Activity Sections -->
+    <div class="row">
+        <!-- Alert Automation Activity -->
+        <div class="col-lg-6 mb-4">
+            <div class="activity-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-bell text-primary me-2"></i>
+                        Alert Automation
+                    </h5>
+                    <a href="{% url 'automation' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fa-solid fa-up-right-from-square me-1"></i>View All
+                    </a>
+                </div>
+      <div class="card-body">
+                    <div id="automationActivity">
+                        <div class="text-center text-muted py-3">
+                            <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                            <p class="mb-0">No recent automation activity</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exercise Activity -->
+        <div class="col-lg-6 mb-4">
+            <div class="activity-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-dumbbell text-success me-2"></i>
+                        Exercise Activity
+                    </h5>
+                    <a href="{% url 'exercises_page' %}" class="btn btn-sm btn-outline-success">
+                        <i class="fa-solid fa-up-right-from-square me-1"></i>View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div id="exerciseActivity">
+                        <div class="text-center text-muted py-3">
+                            <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                            <p class="mb-0">No recent exercise activity</p>
+                        </div>
+                    </div>
+          </div>
+          </div>
+        </div>
+
+        <!-- Cryptography Activity -->
+        <div class="col-lg-6 mb-4">
+            <div class="activity-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-lock text-warning me-2"></i>
+                        Cryptography Tools
+                    </h5>
+                    <a href="{% url 'cryptography' %}" class="btn btn-sm btn-outline-warning">
+                        <i class="fa-solid fa-up-right-from-square me-1"></i>View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div id="cryptoActivity">
+                        <div class="text-center text-muted py-3">
+                            <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                            <p class="mb-0">No recent cryptography activity</p>
+                        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+        <!-- Recent Jokes -->
+        <div class="col-lg-6 mb-4">
+            <div class="activity-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fa-regular fa-face-laugh text-info me-2"></i>
+                        Recent Jokes
+                    </h5>
+                    <a href="{% url 'jokes' %}" class="btn btn-sm btn-outline-info">
+                        <i class="fa-solid fa-up-right-from-square me-1"></i>View All
+                    </a>
+                </div>
+      <div class="card-body">
+                    <div id="jokeActivity">
+                        <div class="text-center text-muted py-3">
+                            <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                            <p class="mb-0">No recent jokes</p>
+                        </div>
+        </div>
+          </div>
+          </div>
+        </div>
+
+        <!-- Anime API Activity -->
+        <div class="col-lg-12 mb-4">
+            <div class="activity-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fa-regular fa-circle-play text-danger me-2"></i>
+                        Anime API Activity
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearAnimeActivity()">
+                            <i class="fa-solid fa-trash-can me-1"></i>Clear
+                        </button>
+                        <a href="{% url 'anime' %}" class="btn btn-sm btn-outline-danger">
+                            <i class="fa-solid fa-up-right-from-square me-1"></i>View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="animeActivity">
+                        <div class="text-center text-muted py-3">
+                            <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                            <p class="mb-0">No recent anime searches</p>
+                        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="quick-actions-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-bolt text-primary me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2 col-6 mb-3">
+                            <a href="{% url 'automation' %}" class="quick-action-btn">
+                                <i class="fa-solid fa-bell"></i>
+                                <span>Start Automation</span>
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <a href="{% url 'exercises_page' %}" class="quick-action-btn">
+                                <i class="fa-solid fa-dumbbell"></i>
+                                <span>Log Exercise</span>
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <a href="{% url 'cryptography' %}" class="quick-action-btn">
+                                <i class="fa-solid fa-lock"></i>
+                                <span>Encrypt Text</span>
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <a href="{% url 'jokes' %}" class="quick-action-btn">
+                                <i class="fa-regular fa-face-laugh"></i>
+                                <span>Get Joke</span>
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <a href="{% url 'anime' %}" class="quick-action-btn">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <span>Search Anime</span>
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <a href="{% url 'settings' %}" class="quick-action-btn">
+                                <i class="fa-solid fa-gear"></i>
+                                <span>Settings</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load recent activity from localStorage (real data only)
+    loadRecentActivity();
+    
+    // Update activity every 30 seconds
+    setInterval(loadRecentActivity, 30000);
+    
+    // Update time display
+    updateTime();
+    setInterval(updateTime, 1000);
+});
+
+function updateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    });
+    document.getElementById('currentTime').textContent = timeString;
+}
+
+function loadRecentActivity() {
+    // Load automation activity
+    loadAutomationActivity();
+    
+    // Load exercise activity  
+    loadExerciseActivity();
+    
+    // Load crypto activity
+    loadCryptoActivity();
+    
+    // Load joke activity
+    loadJokeActivity();
+    
+    // Load anime activity
+    loadAnimeActivity();
+    
+    // Update counts
+    updateActivityCounts();
+}
+
+async function loadAutomationActivity() {
+    const container = document.getElementById('automationActivity');
+    try {
+        const res = await fetch('/automation/alerts/?limit=5');
+        if (!res.ok) throw new Error('Failed to load alerts');
+        const data = await res.json();
+        const alerts = data.results || [];
+        if (!alerts.length) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-3">
+                    <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                    <p class="mb-0">No recent automation activity</p>
+                </div>
+            `;
+            return;
+        }
+        container.innerHTML = '';
+        alerts.forEach(a => {
+            const badgeClass = a.level === 'error' ? 'bg-danger' : (a.level === 'warning' ? 'bg-warning text-dark' : 'bg-primary');
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            item.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>${(a.level || 'info').toUpperCase()}</strong>
+                        <p class="mb-1 small">${a.message}</p>
+                        <span class="activity-time">${new Date(a.created_at).toLocaleString()}</span>
+                    </div>
+                    <span class="badge ${badgeClass} activity-badge">AUTO</span>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+        initVerticalSlide('automationActivity', 3, 3500);
+    } catch (e) {
+        // fallback to localStorage if API not available
+        const automationLogs = JSON.parse(localStorage.getItem('automationLogs') || '[]');
+        if (automationLogs.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-3">
+                    <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                    <p class="mb-0">No recent automation activity</p>
+                </div>
+            `;
+            return;
+        }
+        const recentLogs = automationLogs.slice(-5).reverse();
+        container.innerHTML = '';
+        recentLogs.forEach(log => {
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            item.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>${log.type || 'Alert'}</strong>
+                        <p class="mb-1 small">${log.message}</p>
+                        <span class="activity-time">${new Date(log.timestamp).toLocaleString()}</span>
+                    </div>
+                    <span class="badge bg-primary activity-badge">AUTO</span>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+        initVerticalSlide('automationActivity', 3, 3500);
+    }
+}
+
+async function loadExerciseActivity() {
+    const container = document.getElementById('exerciseActivity');
+    try {
+        const res = await fetch('/api/exercises/');
+        if (!res.ok) throw new Error('Failed to load exercises');
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.results || data || []);
+
+        if (!list || list.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-3">
+                    <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                    <p class="mb-0">No recent exercise activity</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Take the latest 5 items (assuming API returns newest first; otherwise reverse/sort if needed)
+        const recent = list.slice(0, 5);
+        container.innerHTML = '';
+
+        recent.forEach(ex => {
+            const created = ex.created || ex.timestamp || null;
+            const when = created ? new Date(created).toLocaleString() : 'Recently';
+            const sets = (typeof ex.sets !== 'undefined' && ex.sets !== null) ? ex.sets : '-';
+            const reps = (typeof ex.reps !== 'undefined' && ex.reps !== null && ex.reps !== '') ? ex.reps : '-';
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            item.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>${ex.name || 'Exercise'}</strong>
+                        <p class="mb-1 small">${sets} sets × ${reps} reps</p>
+                        <span class="activity-time">${when}</span>
+                    </div>
+                    <span class="badge bg-success activity-badge">EXERCISE</span>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+        initVerticalSlide('exerciseActivity', 3, 3500);
+    } catch (e) {
+        // Fallback to localStorage if API fails
+        const exerciseHistory = JSON.parse(localStorage.getItem('exerciseHistory') || '[]');
+        if (exerciseHistory.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-3">
+                    <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                    <p class="mb-0">No recent exercise activity</p>
+                </div>
+            `;
+            return;
+        }
+        const recentExercises = exerciseHistory.slice(-5).reverse();
+        container.innerHTML = '';
+        recentExercises.forEach(exercise => {
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            item.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>${exercise.name}</strong>
+                        <p class="mb-1 small">${exercise.sets} sets × ${exercise.reps} reps</p>
+                        <span class="activity-time">${new Date(exercise.timestamp).toLocaleString()}</span>
+                    </div>
+                    <span class="badge bg-success activity-badge">EXERCISE</span>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+        initVerticalSlide('exerciseActivity', 3, 3500);
+    }
+}
+
+function loadCryptoActivity() {
+    const container = document.getElementById('cryptoActivity');
+    if (!container) return;
+    
+    const cryptoHistory = JSON.parse(localStorage.getItem('cryptoHistory') || '[]');
+    
+    if (cryptoHistory.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-3">
+                <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                <p class="mb-0">No recent cryptography activity</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const recentCrypto = cryptoHistory.slice(-5).reverse();
+    container.innerHTML = '';
+    
+    recentCrypto.forEach(crypto => {
+        const item = document.createElement('div');
+        item.className = 'activity-item';
+        item.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>${crypto.cipher.toUpperCase()} ${crypto.operation}</strong>
+                    <p class="mb-1 small">${crypto.original.substring(0, 50)}${crypto.original.length > 50 ? '...' : ''}</p>
+                    <span class="activity-time">${new Date(crypto.timestamp).toLocaleString()}</span>
+                </div>
+                <span class="badge bg-warning activity-badge">CRYPTO</span>
+            </div>
+        `;
+        container.appendChild(item);
+    });
+    initVerticalSlide('cryptoActivity', 3, 3500);
+}
+
+function loadJokeActivity() {
+    const container = document.getElementById('jokeActivity');
+    if (!container) return;
+    
+    const jokeHistory = JSON.parse(localStorage.getItem('jokeHistory') || '[]');
+    
+    if (jokeHistory.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-3">
+                <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                <p class="mb-0">No recent jokes</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const recentJokes = jokeHistory.slice(-3).reverse();
+    container.innerHTML = '';
+    
+    recentJokes.forEach(joke => {
+        const item = document.createElement('div');
+        item.className = 'activity-item';
+        item.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="mb-1">${joke.text.substring(0, 80)}${joke.text.length > 80 ? '...' : ''}</p>
+                    <span class="activity-time">${new Date(joke.timestamp).toLocaleString()}</span>
+                </div>
+                <span class="badge bg-info activity-badge">JOKE</span>
+            </div>
+        `;
+        container.appendChild(item);
+    });
+    initVerticalSlide('jokeActivity', 3, 3500);
+}
+
+function loadAnimeActivity() {
+    const container = document.getElementById('animeActivity');
+    if (!container) return;
+    
+    const animeHistory = JSON.parse(localStorage.getItem('animeSearchHistory') || '[]');
+    
+    if (animeHistory.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-3">
+                <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                <p class="mb-0">No recent anime searches</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const recentSearches = animeHistory.slice(-5).reverse();
+    container.innerHTML = '';
+    
+    recentSearches.forEach(search => {
+        const item = document.createElement('div');
+        item.className = 'activity-item';
+        item.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>Searched: "${search.query}"</strong>
+                    <p class="mb-1 small">${search.results} results found</p>
+                    <span class="activity-time">${new Date(search.timestamp).toLocaleString()}</span>
+                </div>
+                <span class="badge bg-danger activity-badge">ANIME</span>
+            </div>
+        `;
+        container.appendChild(item);
+    });
+    // Make the anime activity visibly scrollable
+    container.style.maxHeight = '260px';
+    container.style.overflowY = 'auto';
+}
+
+async function updateActivityCounts() {
+    // Update stat cards with real data
+    const automationLogs = JSON.parse(localStorage.getItem('automationLogs') || '[]');
+    const cryptoHistory = JSON.parse(localStorage.getItem('cryptoHistory') || '[]');
+    const jokeHistory = JSON.parse(localStorage.getItem('jokeHistory') || '[]');
+    const animeHistory = JSON.parse(localStorage.getItem('animeSearchHistory') || '[]');
+    
+    // Update counts using proper IDs
+    const automationCountEl = document.getElementById('automationCount');
+    if (automationCountEl) {
+        try {
+            const res = await fetch('/automation/alerts/?limit=50');
+            if (res.ok) {
+                const data = await res.json();
+                const alerts = data.results || [];
+                automationCountEl.textContent = alerts.length;
+            } else {
+                automationCountEl.textContent = automationLogs.length;
+            }
+        } catch (_) {
+            automationCountEl.textContent = automationLogs.length;
+        }
+    }
+    
+    const exerciseCountEl = document.getElementById('exerciseCount');
+    if (exerciseCountEl) {
+        try {
+            const res = await fetch('/api/exercises/');
+            if (res.ok) {
+                const data = await res.json();
+                const list = Array.isArray(data) ? data : (data.results || data || []);
+                exerciseCountEl.textContent = list.length;
+            } else {
+                // fallback to localStorage length
+                const exerciseHistory = JSON.parse(localStorage.getItem('exerciseHistory') || '[]');
+                exerciseCountEl.textContent = exerciseHistory.length;
+            }
+        } catch (_) {
+            const exerciseHistory = JSON.parse(localStorage.getItem('exerciseHistory') || '[]');
+            exerciseCountEl.textContent = exerciseHistory.length;
+        }
+    }
+    
+    const cryptoCountEl = document.getElementById('cryptoCount');
+    if (cryptoCountEl) cryptoCountEl.textContent = cryptoHistory.length;
+    
+    const jokeCountEl = document.getElementById('jokeCount');
+    if (jokeCountEl) jokeCountEl.textContent = jokeHistory.length;
+    
+    const animeCountEl = document.getElementById('animeCount');
+    if (animeCountEl) animeCountEl.textContent = animeHistory.length;
+    
+    const totalCountEl = document.getElementById('totalCount');
+    if (totalCountEl) {
+        // Recompute total after we set exercise count via API
+        let exerciseLen = 0;
+        try {
+            const res = await fetch('/api/exercises/');
+            if (res.ok) {
+                const data = await res.json();
+                const list = Array.isArray(data) ? data : (data.results || data || []);
+                exerciseLen = list.length;
+            } else {
+                exerciseLen = JSON.parse(localStorage.getItem('exerciseHistory') || '[]').length;
+            }
+        } catch (_) {
+            exerciseLen = JSON.parse(localStorage.getItem('exerciseHistory') || '[]').length;
+        }
+        // Re-fetch alerts length for accurate total
+        let alertsLen = 0;
+        try {
+            const res2 = await fetch('/automation/alerts/?limit=50');
+            if (res2.ok) {
+                const data2 = await res2.json();
+                alertsLen = (data2.results || []).length;
+            } else {
+                alertsLen = automationLogs.length;
+            }
+        } catch (_) {
+            alertsLen = automationLogs.length;
+        }
+        totalCountEl.textContent = alertsLen + exerciseLen + cryptoHistory.length + jokeHistory.length + animeHistory.length;
+    }
+}
+
+// Global function to save activity data for dashboard tracking
+window.saveToDashboard = function(type, data) {
+    const timestamp = new Date().toISOString();
+    let storageKey = '';
+    let activityData = {};
+    
+    switch(type) {
+        case 'automation':
+            storageKey = 'automationLogs';
+            activityData = {
+                type: data.type || 'Alert',
+                message: data.message || 'Activity logged',
+                timestamp: timestamp
+            };
+            break;
+            
+        case 'exercise':
+            storageKey = 'exerciseHistory';
+            activityData = {
+                name: data.name || 'Exercise',
+                sets: data.sets || 1,
+                reps: data.reps || 1,
+                timestamp: timestamp
+            };
+            break;
+            
+        case 'crypto':
+            storageKey = 'cryptoHistory';
+            activityData = {
+                cipher: data.cipher || 'unknown',
+                operation: data.operation || 'Encrypt',
+                original: data.original || '',
+                result: data.result || '',
+                timestamp: timestamp
+            };
+            break;
+            
+        case 'joke':
+            storageKey = 'jokeHistory';
+            activityData = {
+                text: data.text || '',
+                timestamp: timestamp
+            };
+            break;
+            
+        case 'anime':
+            storageKey = 'animeSearchHistory';
+            activityData = {
+                query: data.query || '',
+                results: data.results || 0,
+                timestamp: timestamp
+            };
+            break;
+            
+        default:
+            return;
+    }
+    
+    // Get existing data
+    const existingData = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    
+    // Add new activity
+    existingData.unshift(activityData);
+    
+    // Keep only last 50 items
+    if (existingData.length > 50) {
+        existingData.splice(50);
+    }
+    
+    // Save back to localStorage
+    localStorage.setItem(storageKey, JSON.stringify(existingData));
+    
+    console.log(`Dashboard activity saved: ${type}`, activityData);
+}
+
+// Vertical slide helper: shows `visibleCount` items and auto-scrolls vertically
+const _vslideState = {};
+function initVerticalSlide(containerId, visibleCount = 3, intervalMs = 3500) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const items = Array.from(container.querySelectorAll('.activity-item'));
+    if (items.length <= visibleCount) return; // nothing to slide
+
+    // Build wrapper
+    const wrapper = document.createElement('div');
+    wrapper.className = 'activity-vertical-wrapper';
+    wrapper.style.willChange = 'transform';
+    wrapper.style.transition = 'transform 400ms ease';
+
+    // Move items into wrapper
+    items.forEach(el => wrapper.appendChild(el));
+    container.innerHTML = '';
+    container.appendChild(wrapper);
+
+    // Container styles
+    container.style.overflow = 'hidden';
+    container.style.position = 'relative';
+
+    // Precompute cumulative heights (including margins)
+    const itemHeights = items.map(el => el.getBoundingClientRect().height);
+    const cumulative = [0];
+    for (let i = 0; i < itemHeights.length; i++) {
+        cumulative.push(cumulative[i] + itemHeights[i]);
+    }
+
+    // Set viewport height to first `visibleCount` total
+    const viewportHeight = cumulative[visibleCount];
+    container.style.minHeight = viewportHeight + 'px';
+
+    // State
+    if (_vslideState[containerId]?.timer) clearInterval(_vslideState[containerId].timer);
+    _vslideState[containerId] = { index: 0, timer: null };
+
+    const advance = () => {
+        const state = _vslideState[containerId];
+        let next = state.index + 1;
+        // When we reach end-viewport, snap back
+        if (next > items.length - visibleCount) {
+            // snap instantly to start
+            wrapper.style.transition = 'none';
+            wrapper.style.transform = 'translateY(0)';
+            state.index = 0;
+            // force reflow then restore transition
+            void wrapper.offsetHeight;
+            wrapper.style.transition = 'transform 400ms ease';
+            next = 1; // slide to first offset
+        }
+        const offset = cumulative[next];
+        wrapper.style.transform = `translateY(-${offset}px)`;
+        state.index = next;
+    };
+
+    _vslideState[containerId].timer = setInterval(advance, intervalMs);
+
+    // Pause on hover
+    container.addEventListener('mouseenter', () => {
+        const s = _vslideState[containerId];
+        if (s?.timer) clearInterval(s.timer);
+        s.timer = null;
+    });
+    container.addEventListener('mouseleave', () => {
+        const s = _vslideState[containerId];
+        if (!s?.timer) s.timer = setInterval(advance, intervalMs);
+    });
+}
+
+// removed horizontal slider; anime activity uses vertical slider like others
+</script>
+<script>
+function clearAnimeActivity() {
+    try {
+        localStorage.removeItem('animeSearchHistory');
+    } catch (_) {}
+    // Refresh the anime activity list and counts
+    try {
+        const container = document.getElementById('animeActivity');
+        if (container) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-3">
+                    <i class="fa-solid fa-inbox fa-2x mb-2"></i>
+                    <p class="mb-0">No recent anime searches</p>
+                </div>
+            `;
+        }
+    } catch (_) {}
+    try { updateActivityCounts(); } catch (_) {}
+}
+
+// Profile picture fallback handling
+document.addEventListener('DOMContentLoaded', function() {
+    const profilePictures = document.querySelectorAll('.profile-picture');
+    profilePictures.forEach(function(img) {
+        img.addEventListener('error', function() {
+            // Hide the broken image and show the icon
+            this.style.display = 'none';
+            const userAvatar = this.closest('.user-avatar');
+            if (userAvatar) {
+                const icon = userAvatar.querySelector('i');
+                if (icon) {
+                    icon.style.display = 'block';
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

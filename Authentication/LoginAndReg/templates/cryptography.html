@@ -1,0 +1,713 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+/* Dashboard-style Cards */
+.card {
+    background: var(--card-bg) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--card-border) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 15px 35px var(--shadow);
+}
+
+/* Dark theme base card adjustments */
+[data-theme="dark"] .card {
+    background: rgba(26, 26, 46, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Dashboard-style Text */
+.card-body label,
+.card-body .form-text,
+.card-body p,
+.card-body span,
+.card-body small,
+.form-label {
+    color: var(--text-primary) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Dashboard-style Form Controls */
+.form-control,
+.form-select {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: var(--text-primary) !important;
+    border: 2px solid var(--card-border) !important;
+    backdrop-filter: blur(10px);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 0.3rem rgba(243, 144, 79, 0.25);
+}
+
+.form-select option {
+    background: #2c3e50 !important;
+    color: #ffffff !important;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.form-select option:hover {
+    background: #34495e !important;
+    color: #ffffff !important;
+}
+
+.form-select option:checked,
+.form-select option:selected {
+    background: #f3904f !important;
+    color: #ffffff !important;
+}
+
+.form-select option:focus {
+    background: #34495e !important;
+    color: #ffffff !important;
+}
+
+/* Additional styling for better visibility */
+.form-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+    color: #ffffff !important;
+    font-weight: 500;
+}
+
+/* Force text visibility in select */
+.form-select:focus {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Additional fallback for select text */
+select.form-select {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+select.form-select option {
+    background-color: #2c3e50 !important;
+    color: #ffffff !important;
+}
+
+/* Most specific selectors to override any conflicts */
+#cipherType {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+#cipherType option {
+    background-color: #2c3e50 !important;
+    color: #ffffff !important;
+    padding: 10px !important;
+    font-size: 14px !important;
+}
+
+#cipherType:focus {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.3) !important;
+}
+</style>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fa-solid fa-lock me-2" style="color: var(--primary-color);"></i>
+                    Cryptography Tools
+                </h2>
+                <div class="d-flex gap-2">
+                    <button id="clearAll" class="btn btn-outline-danger">
+                        <i class="fa-solid fa-trash me-2"></i>Clear All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Input Section -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-pen-to-square me-2"></i>Input & Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% csrf_token %}
+                    <!-- Cipher Type Selection -->
+                    <div class="mb-3">
+                        <label for="cipherType" class="form-label fw-bold">Cipher Type</label>
+                        <select class="form-select" id="cipherType">
+                            <option value="atbash">Atbash Cipher</option>
+                            <option value="caesar">Caesar Cipher</option>
+                            <option value="vigenere">Vigenère Cipher</option>
+                        </select>
+                        <div class="form-text" id="cipherHelp">
+                            <strong>Atbash:</strong> Reverses alphabet (A↔Z, B↔Y)
+                        </div>
+                    </div>
+                    
+                    <!-- Key Input -->
+                    <div class="mb-3" id="keySection">
+                        <label for="cipherKey" class="form-label fw-bold">Key</label>
+                        <input type="text" class="form-control" id="cipherKey" placeholder="Enter key">
+                        <div class="form-text" id="keyHelp">Not required for Atbash cipher</div>
+                    </div>
+                    
+                    <!-- Text Input -->
+                    <div class="mb-3">
+                        <label for="inputText" class="form-label fw-bold">Text to Process</label>
+                        <textarea class="form-control" id="inputText" rows="4" placeholder="Enter your text here..."></textarea>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button id="encryptBtn" class="btn btn-success">
+                            <i class="fa-solid fa-lock me-2"></i>Encrypt
+                        </button>
+                        <button id="decryptBtn" class="btn btn-warning">
+                            <i class="fa-solid fa-unlock me-2"></i>Decrypt
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Output Section -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-gradient-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-arrow-right-arrow-left me-2"></i>Result
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="loadingSpinner" class="text-center d-none">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Processing...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Processing your request...</p>
+                    </div>
+                    
+                    <div id="resultSection" class="d-none">
+                        <!-- Original Text -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted">Original Text:</label>
+                            <div class="form-control bg-light" id="originalText" style="min-height: 60px;"></div>
+                        </div>
+                        
+                        <!-- Result Text -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-success">Result:</label>
+                            <div class="form-control bg-success bg-opacity-10 border-success" id="resultText" style="min-height: 60px;"></div>
+                        </div>
+                        
+                        <!-- Operation Info -->
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="fa-solid fa-circle-info me-1"></i>
+                                <span id="operationInfo"></span>
+                            </small>
+                        </div>
+                        
+                        <!-- Copy Buttons -->
+                        <div class="d-flex gap-2 justify-content-center mb-3">
+                            <button id="copyOriginal" class="btn btn-sm btn-outline-secondary">
+                                <i class="fa-regular fa-copy me-1"></i>Copy Original
+                            </button>
+                            <button id="copyResult" class="btn btn-sm btn-outline-success">
+                                <i class="fa-regular fa-copy me-1"></i>Copy Result
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="welcomeMessage" class="text-center py-4">
+                        <i class="fa-solid fa-shield-halved fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Choose a cipher and enter your text</h5>
+                        <p class="text-muted">Select encryption or decryption to get started!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- QR Codes Section (Collapsible) -->
+    <div class="row" id="qrSection" style="display: none;">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header" role="button" data-bs-toggle="collapse" data-bs-target="#qrContent" aria-expanded="false">
+                    <h5 class="mb-0 d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="fa-solid fa-qrcode me-2"></i>QR Codes
+                        </span>
+                        <i class="fa-solid fa-chevron-down" id="qrToggleIcon"></i>
+                    </h5>
+                </div>
+                <div class="collapse" id="qrContent">
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Original Text QR -->
+                            <div class="col-md-4 mb-3">
+                                <div class="text-center">
+                                    <h6 class="text-muted mb-3">Original Text QR</h6>
+                                    <div class="qr-container">
+                                        <img id="originalQR" src="" alt="Original QR Code" class="img-fluid rounded border" style="max-width: 200px;">
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="downloadQR('originalQR', 'original-text-qr.png')">
+                                        <i class="fa-solid fa-download me-1"></i>Download
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Result Text QR -->
+                            <div class="col-md-4 mb-3">
+                                <div class="text-center">
+                                    <h6 class="text-success mb-3">Result Text QR</h6>
+                                    <div class="qr-container">
+                                        <img id="resultQR" src="" alt="Result QR Code" class="img-fluid rounded border" style="max-width: 200px;">
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-success mt-2" onclick="downloadQR('resultQR', 'result-text-qr.png')">
+                                        <i class="fa-solid fa-download me-1"></i>Download
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Combined QR -->
+                            <div class="col-md-4 mb-3">
+                                <div class="text-center">
+                                    <h6 class="text-info mb-3">Combined QR</h6>
+                                    <div class="qr-container">
+                                        <img id="combinedQR" src="" alt="Combined QR Code" class="img-fluid rounded border" style="max-width: 200px;">
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-info mt-2" onclick="downloadQR('combinedQR', 'combined-qr.png')">
+                                        <i class="fa-solid fa-download me-1"></i>Download
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-12 text-center">
+                                <small class="text-muted">
+                                    <i class="fa-solid fa-circle-info me-1"></i>
+                                    Scan these QR codes to view the encrypted and decrypted text
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- History Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-clock-rotate-left me-2"></i>Recent Operations
+                        <button id="clearHistory" class="btn btn-sm btn-outline-danger float-end">
+                            <i class="fa-solid fa-trash me-1"></i>Clear History
+                        </button>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="historyContainer">
+                        <div class="text-center text-muted py-4">
+                            <i class="fa-regular fa-clock fa-2x mb-2"></i>
+                            <p>Your cryptography operations will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary-color), #667eea) !important;
+}
+
+.bg-gradient-secondary {
+    background: linear-gradient(135deg, var(--secondary-color), #764ba2) !important;
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.qr-container {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.history-item {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(20px);
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .history-item {
+    background: rgba(26, 26, 46, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.history-item:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+.history-item .text-muted {
+    color: var(--text-primary) !important;
+    opacity: 0.7;
+}
+
+.history-item small {
+    color: var(--text-primary) !important;
+    opacity: 0.8;
+}
+
+.history-item .bg-light {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--card-border) !important;
+}
+
+.history-item .bg-success {
+    background: rgba(40, 167, 69, 0.2) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(40, 167, 69, 0.3) !important;
+}
+
+.history-item .bg-light,
+.history-item .bg-success {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    word-break: break-all;
+}
+
+.cipher-badge {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+}
+
+#qrToggleIcon {
+    transition: transform 0.3s ease;
+}
+
+.collapsed #qrToggleIcon {
+    transform: rotate(-90deg);
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color-rgb), 0.25);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cipherType = document.getElementById('cipherType');
+    const cipherKey = document.getElementById('cipherKey');
+    const inputText = document.getElementById('inputText');
+    const encryptBtn = document.getElementById('encryptBtn');
+    const decryptBtn = document.getElementById('decryptBtn');
+    const clearAllBtn = document.getElementById('clearAll');
+    const clearHistoryBtn = document.getElementById('clearHistory');
+    
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const resultSection = document.getElementById('resultSection');
+    const welcomeMessage = document.getElementById('welcomeMessage');
+    const qrSection = document.getElementById('qrSection');
+    
+    const originalText = document.getElementById('originalText');
+    const resultText = document.getElementById('resultText');
+    const operationInfo = document.getElementById('operationInfo');
+    
+    const copyOriginal = document.getElementById('copyOriginal');
+    const copyResult = document.getElementById('copyResult');
+    
+    const cipherHelp = document.getElementById('cipherHelp');
+    const keyHelp = document.getElementById('keyHelp');
+    const keySection = document.getElementById('keySection');
+    
+    let history = JSON.parse(localStorage.getItem('cryptoHistory') || '[]');
+    
+    // Load history on page load
+    updateHistoryDisplay();
+    
+    // Update help text and key requirements based on cipher type
+    cipherType.addEventListener('change', function() {
+        updateCipherHelp();
+    });
+    
+    // Initialize help text
+    updateCipherHelp();
+    
+    encryptBtn.addEventListener('click', () => processCrypto('encrypt'));
+    decryptBtn.addEventListener('click', () => processCrypto('decrypt'));
+    
+    copyOriginal.addEventListener('click', () => copyToClipboard(originalText.textContent));
+    copyResult.addEventListener('click', () => copyToClipboard(resultText.textContent));
+    
+    clearAllBtn.addEventListener('click', clearAll);
+    clearHistoryBtn.addEventListener('click', clearHistory);
+    
+    // QR collapse toggle
+    document.getElementById('qrContent').addEventListener('show.bs.collapse', function() {
+        document.getElementById('qrToggleIcon').classList.remove('fa-chevron-down');
+        document.getElementById('qrToggleIcon').classList.add('fa-chevron-up');
+    });
+    
+    document.getElementById('qrContent').addEventListener('hide.bs.collapse', function() {
+        document.getElementById('qrToggleIcon').classList.remove('fa-chevron-up');
+        document.getElementById('qrToggleIcon').classList.add('fa-chevron-down');
+    });
+    
+    function updateCipherHelp() {
+        const cipher = cipherType.value;
+        
+        switch(cipher) {
+            case 'atbash':
+                cipherHelp.innerHTML = '<strong>Atbash:</strong> Reverses alphabet (A↔Z, B↔Y). Same operation for encrypt/decrypt.';
+                keySection.style.display = 'none';
+                break;
+            case 'caesar':
+                cipherHelp.innerHTML = '<strong>Caesar:</strong> Shifts letters by a fixed number. Default shift is 3.';
+                keyHelp.textContent = 'Enter shift value (number). Default: 3';
+                cipherKey.placeholder = 'Enter shift value (e.g., 3)';
+                keySection.style.display = 'block';
+                break;
+            case 'vigenere':
+                cipherHelp.innerHTML = '<strong>Vigenère:</strong> Uses a keyword to shift letters. More secure than Caesar.';
+                keyHelp.textContent = 'Enter a keyword (letters only)';
+                cipherKey.placeholder = 'Enter keyword (e.g., SECRET)';
+                keySection.style.display = 'block';
+                break;
+        }
+    }
+    
+    function processCrypto(operation) {
+        const text = inputText.value.trim();
+        const cipher = cipherType.value;
+        const key = cipherKey.value.trim();
+        
+        if (!text) {
+            alert('Please enter some text to process');
+            return;
+        }
+        
+        if (cipher === 'vigenere' && !key) {
+            alert('Vigenère cipher requires a key');
+            return;
+        }
+        
+        showLoading();
+        
+        const requestData = {
+            text: text,
+            cipher_type: cipher,
+            operation: operation,
+            key: key
+        };
+        
+        fetch('/crypto-process/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayResult(data);
+                addToHistory(data);
+                showQRCodes(data.qr_codes);
+            } else {
+                alert('Error: ' + data.error);
+                hideLoading();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing your request');
+            hideLoading();
+        });
+    }
+    
+    function showLoading() {
+        welcomeMessage.style.display = 'none';
+        resultSection.classList.add('d-none');
+        loadingSpinner.classList.remove('d-none');
+    }
+    
+    function hideLoading() {
+        loadingSpinner.classList.add('d-none');
+    }
+    
+    function displayResult(data) {
+        originalText.textContent = data.original_text;
+        resultText.textContent = data.result_text;
+        operationInfo.textContent = `${data.operation.charAt(0).toUpperCase() + data.operation.slice(1)}ed using ${data.cipher_type.charAt(0).toUpperCase() + data.cipher_type.slice(1)} cipher${data.key ? ' with key: ' + data.key : ''}`;
+        
+        hideLoading();
+        resultSection.classList.remove('d-none');
+    }
+    
+    function showQRCodes(qrCodes) {
+        if (qrCodes.original) document.getElementById('originalQR').src = qrCodes.original;
+        if (qrCodes.result) document.getElementById('resultQR').src = qrCodes.result;
+        if (qrCodes.combined) document.getElementById('combinedQR').src = qrCodes.combined;
+        
+        qrSection.style.display = 'block';
+    }
+    
+    function addToHistory(data) {
+        const historyItem = {
+            timestamp: new Date().toISOString(),
+            cipher: data.cipher_type,
+            operation: data.operation,
+            original: data.original_text,
+            result: data.result_text,
+            key: data.key || 'N/A'
+        };
+        
+        history.unshift(historyItem);
+        
+        // Keep only last 20 operations
+        if (history.length > 20) {
+            history = history.slice(0, 20);
+        }
+        
+        localStorage.setItem('cryptoHistory', JSON.stringify(history));
+        updateHistoryDisplay();
+        
+        // Save to dashboard tracking if function exists
+        if (typeof window.saveToDashboard === 'function') {
+            window.saveToDashboard('crypto', {
+                cipher: data.cipher_type,
+                operation: data.operation,
+                original: data.original_text,
+                result: data.result_text
+            });
+        }
+    }
+    
+    function updateHistoryDisplay() {
+        const container = document.getElementById('historyContainer');
+        
+        if (history.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="fa-regular fa-clock fa-2x mb-2"></i>
+                    <p>Your cryptography operations will appear here</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = '';
+        
+        history.forEach((item, index) => {
+            const historyElement = document.createElement('div');
+            historyElement.className = 'history-item';
+            historyElement.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="d-flex gap-2 align-items-center">
+                        <span class="badge bg-primary cipher-badge">${item.cipher.toUpperCase()}</span>
+                        <span class="badge ${item.operation === 'encrypt' ? 'bg-success' : 'bg-warning'} cipher-badge">
+                            ${item.operation.toUpperCase()}
+                        </span>
+                        ${item.key !== 'N/A' ? `<span class="badge bg-info cipher-badge">Key: ${item.key}</span>` : ''}
+                    </div>
+                    <small class="text-muted">${new Date(item.timestamp).toLocaleString()}</small>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">Original:</small>
+                        <div class="bg-light p-2 rounded small">${item.original}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Result:</small>
+                        <div class="bg-success bg-opacity-10 p-2 rounded small">${item.result}</div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(historyElement);
+        });
+    }
+    
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            // Show temporary success feedback
+            const originalBtn = event.target.closest('button');
+            const originalText = originalBtn.innerHTML;
+            originalBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i>Copied!';
+            originalBtn.classList.add('btn-success');
+            
+            setTimeout(() => {
+                originalBtn.innerHTML = originalText;
+                originalBtn.classList.remove('btn-success');
+            }, 2000);
+        });
+    }
+    
+    function clearAll() {
+        if (confirm('Clear all input fields and results?')) {
+            inputText.value = '';
+            cipherKey.value = '';
+            resultSection.classList.add('d-none');
+            welcomeMessage.style.display = 'block';
+            qrSection.style.display = 'none';
+        }
+    }
+    
+    function clearHistory() {
+        if (confirm('Clear all operation history?')) {
+            history = [];
+            localStorage.removeItem('cryptoHistory');
+            updateHistoryDisplay();
+        }
+    }
+    
+    function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+    }
+});
+
+function downloadQR(imgId, filename) {
+    const img = document.getElementById(imgId);
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = img.src;
+    link.click();
+}
+</script>
+{% endblock %}

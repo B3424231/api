@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Facebook Login - Django Authentication{% endblock %}
+
+{% block content %}
+<div class="text-center mb-4">
+    <h2><i class="fa-brands fa-facebook text-primary"></i> Facebook Login</h2>
+    <p class="text-muted">Sign in with your Facebook account</p>
+</div>
+
+<div class="alert alert-info">
+    <i class="fa-solid fa-circle-info alert-icon"></i>
+    <span class="alert-content">
+        <strong>Facebook Authentication</strong><br>
+        Click the button below to authenticate with Facebook. You'll be redirected to Facebook's secure login page.
+    </span>
+</div>
+
+<div class="d-grid gap-2">
+    <a href="{{ facebook_auth_url }}" class="btn btn-facebook btn-lg">
+        <i class="fa-brands fa-facebook-f"></i> Continue with Facebook
+    </a>
+    <a href="{% url 'login' %}" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Back to Regular Login
+    </a>
+</div>
+
+{% endblock %}

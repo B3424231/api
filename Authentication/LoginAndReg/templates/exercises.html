@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+
+{% block title %}Exercises{% endblock %}
+
+{% block content %}
+<style>
+  /* Harmonize list colors with dark theme */
+  #list .card { background: var(--card-bg); border: 1px solid var(--card-border); }
+  #list .card .fw-bold { color: var(--text-secondary); }
+  #list .card .text-muted { color: var(--text-muted) !important; }
+  #list .card .small { color: var(--text-secondary); }
+  /* Form labels */
+  .form-label { color: var(--text-secondary); }
+
+  /* Dark theme overrides */
+  [data-theme="dark"] #list .card { background: rgba(26,26,46,0.9); border-color: rgba(255,255,255,0.2); }
+  [data-theme="dark"] #list .card .fw-bold, 
+  [data-theme="dark"] #list .card .small, 
+  [data-theme="dark"] .form-label { color: #ffffff; }
+  [data-theme="dark"] #list .card .text-muted { color: #cbd5e1 !important; }
+  
+  /* Clear all button styling */
+  #clear-all-btn {
+    font-family: 'Poppins', sans-serif !important;
+    transition: all 0.3s ease;
+    border-color: #c8766b;
+    color: #c8766b;
+  }
+  
+  #clear-all-btn:hover {
+    background-color: #c8766b;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(200, 118, 107, 0.3);
+  }
+  
+  #clear-all-btn:active {
+    transform: translateY(0);
+  }
+  
+  /* Form clear button styling */
+  #ex-clear {
+    font-family: 'Poppins', sans-serif !important;
+    transition: all 0.3s ease;
+    border-color: #e8825d;
+    color: #e8825d;
+    font-weight: 600;
+  }
+  
+  #ex-clear:hover {
+    background-color: #e8825d;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(232, 130, 93, 0.3);
+  }
+  
+  #ex-clear:active {
+    transform: translateY(0);
+  }
+  
+  /* Create button enhancement */
+  #ex-create {
+    font-family: 'Poppins', sans-serif !important;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  
+  #ex-create:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(var(--primary-color), 0.3);
+  }
+  
+  /* Ensure all text uses Poppins */
+  .card-header, .card-body, .btn, .form-control, .alert {
+    font-family: 'Poppins', sans-serif !important;
+  }
+  
+  /* Ensure all icons are visible in exercises page */
+  i, .fas, .fab, .far, .fal, .fad, .fa {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+  
+  .btn i, .card-header i, .alert i {
+    color: rgba(255, 255, 255, 0.95) !important;
+  }
+  
+  #clear-all-btn i {
+    color: inherit !important;
+  }
+  
+  #ex-clear i, #ex-create i {
+    color: inherit !important;
+  }
+
+  /* Page card styling to match dashboard */
+  .card { 
+    background: var(--card-bg); 
+    border: 1px solid var(--card-border); 
+    border-radius: 12px; 
+    backdrop-filter: blur(10px);
+  }
+  .card-header { 
+    background: rgba(255, 255, 255, 0.1); 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  [data-theme="dark"] .card { 
+    background: rgba(26,26,46,0.9); 
+    border-color: rgba(255,255,255,0.2); 
+  }
+  [data-theme="dark"] .card-header { 
+    background: rgba(255,255,255,0.08); 
+    border-bottom-color: rgba(255,255,255,0.2);
+    color: #ffffff;
+  }
+</style>
+<div class="text-center mb-4">
+  <h2>Exercises</h2>
+  <p class="text-muted">Create and manage exercises (integrated with /api/exercises/)</p>
+  <a href="/api/exercises/" class="btn btn-outline-primary btn-sm">Open REST</a>
+  <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">Back</a>
+  <hr>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header">New Exercise</div>
+      <div class="card-body">
+        <div class="mb-2">
+          <label class="form-label">Name</label>
+          <input id="ex-name" class="form-control" placeholder="e.g. squats">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Category</label>
+          <input id="ex-category" class="form-control" placeholder="e.g. legs">
+        </div>
+        <div class="row g-2 mb-2">
+          <div class="col-6">
+            <label class="form-label">Sets</label>
+            <input id="ex-sets" type="number" value="3" class="form-control">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Reps</label>
+            <input id="ex-reps" class="form-control" placeholder="e.g. 15">
+          </div>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Description</label>
+          <textarea id="ex-description" rows="3" class="form-control" placeholder="Bodyweight squats for leg strength"></textarea>
+        </div>
+        <div class="d-flex gap-2">
+          <button id="ex-create" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Create Exercise
+          </button>
+          <button id="ex-clear" class="btn btn-outline-warning">
+            <i class="fa-solid fa-eraser"></i> Clear Form
+          </button>
+        </div>
+        <div id="ex-status" class="mt-2"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Exercises List</span>
+        <button id="clear-all-btn" class="btn btn-outline-danger btn-sm" title="Clear all exercises">
+          <i class="fa-solid fa-trash-can"></i> Clear All
+        </button>
+      </div>
+      <div class="card-body">
+        <div id="list" class="row g-2"></div>
+        <div id="list-status" class="mt-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function getCookie(name){const m=document.cookie.match('(?:^|; )'+name+'=([^;]*)');return m?decodeURIComponent(m[1]):''}
+  async function fetchExercises(){
+    const res = await fetch('/api/exercises/');
+    const data = await res.json();
+    const list = Array.isArray(data) ? data : (data.results || data);
+    const container = document.getElementById('list');
+    container.innerHTML = (list || []).map(it => `
+      <div class="col-md-6"><div class="card">
+        <div class="card-body">
+          <div class="fw-bold">${it.name}</div>
+          <div class="text-muted small">${it.category} • sets: ${it.sets} • reps: ${it.reps||'-'}</div>
+          <div class="small">${it.description||''}</div>
+        </div>
+      </div></div>
+    `).join('');
+  }
+  document.getElementById('ex-create').addEventListener('click', async ()=>{
+    const payload = {
+      name: document.getElementById('ex-name').value.trim(),
+      category: document.getElementById('ex-category').value.trim(),
+      sets: parseInt(document.getElementById('ex-sets').value || '0'),
+      reps: document.getElementById('ex-reps').value.trim(),
+      description: document.getElementById('ex-description').value.trim()
+    };
+    if(!payload.name){ document.getElementById('ex-status').innerHTML='<div class="alert alert-danger">Name is required</div>'; return; }
+    const res = await fetch('/api/exercises/', { method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')}, body: JSON.stringify(payload)});
+    if(res.ok){
+      document.getElementById('ex-status').innerHTML='<div class="alert alert-success">Created.</div>';
+      // Record to localStorage so Dashboard activity stays in sync
+      try {
+        const historyKey = 'exerciseHistory';
+        const entry = {
+          name: payload.name,
+          sets: payload.sets,
+          reps: payload.reps || 0,
+          timestamp: new Date().toISOString()
+        };
+        const existing = JSON.parse(localStorage.getItem(historyKey) || '[]');
+        existing.unshift(entry);
+        if (existing.length > 50) existing.splice(50);
+        localStorage.setItem(historyKey, JSON.stringify(existing));
+        if (typeof window.saveToDashboard === 'function') {
+          window.saveToDashboard('exercise', { name: payload.name, sets: payload.sets, reps: payload.reps });
+        }
+      } catch (e) { /* non-fatal */ }
+      ['ex-name','ex-category','ex-sets','ex-reps','ex-description'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('ex-sets').value='3';
+      fetchExercises();
+    } else {
+      const js = await res.json().catch(()=>({}));
+      document.getElementById('ex-status').innerHTML='<div class="alert alert-danger">'+(js.detail||JSON.stringify(js)||'Failed')+'</div>';
+    }
+  });
+  document.getElementById('ex-clear').addEventListener('click', ()=>{
+    // Clear all form fields
+    ['ex-name','ex-category','ex-sets','ex-reps','ex-description'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('ex-sets').value='3';
+    document.getElementById('ex-status').innerHTML='<div class="alert alert-info"><i class="fa-solid fa-circle-info"></i> Form cleared successfully!</div>';
+    
+    // Clear the success message after 2 seconds
+    setTimeout(() => {
+      document.getElementById('ex-status').innerHTML = '';
+    }, 2000);
+    
+    // Focus on the first input field for better UX
+    document.getElementById('ex-name').focus();
+  });
+  
+  // Clear all exercises functionality
+  document.getElementById('clear-all-btn').addEventListener('click', async ()=>{
+    // Show confirmation dialog
+    const confirmed = confirm('⚠️ Are you sure you want to delete ALL exercises?\n\nThis action cannot be undone!');
+    if (!confirmed) return;
+    
+    try {
+      // First, fetch all exercises to get their IDs
+      const res = await fetch('/api/exercises/');
+      const data = await res.json();
+      const exercises = Array.isArray(data) ? data : (data.results || data);
+      
+      if (!exercises || exercises.length === 0) {
+        document.getElementById('list-status').innerHTML='<div class="alert alert-info"><i class="fa-solid fa-circle-info"></i> No exercises to clear</div>';
+        return;
+      }
+      
+      // Show loading state
+      document.getElementById('list-status').innerHTML='<div class="alert alert-warning"><i class="fa-solid fa-spinner fa-spin"></i> Clearing exercises...</div>';
+      
+      // Delete each exercise
+      let deletedCount = 0;
+      let failedCount = 0;
+      
+      for (const exercise of exercises) {
+        try {
+          const deleteRes = await fetch(`/api/exercises/${exercise.id}/`, {
+            method: 'DELETE',
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken')
+            }
+          });
+          
+          if (deleteRes.ok) {
+            deletedCount++;
+          } else {
+            failedCount++;
+          }
+        } catch (error) {
+          failedCount++;
+        }
+      }
+      
+      // After deletes, also clear exercise activity history so Dashboard matches
+      try {
+        localStorage.removeItem('exerciseHistory');
+      } catch (_) { /* ignore */ }
+
+      // Show results
+      if (failedCount === 0) {
+        document.getElementById('list-status').innerHTML=`<div class="alert alert-success"><i class="fa-solid fa-circle-check"></i> Successfully cleared ${deletedCount} exercises!</div>`;
+      } else {
+        document.getElementById('list-status').innerHTML=`<div class="alert alert-warning"><i class="fa-solid fa-triangle-exclamation"></i> Cleared ${deletedCount} exercises, ${failedCount} failed</div>`;
+      }
+      
+      // Refresh the list
+      fetchExercises();
+      
+      // Clear status after 3 seconds
+      setTimeout(() => {
+        document.getElementById('list-status').innerHTML = '';
+      }, 3000);
+      
+    } catch (error) {
+      document.getElementById('list-status').innerHTML='<div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation"></i> Error clearing exercises: ' + error.message + '</div>';
+    }
+  });
+  
+  fetchExercises();
+  
+  // Apply smart form text colors after page load
+  setTimeout(() => {
+    if (typeof adjustFormTextColors === 'function') {
+      adjustFormTextColors();
+    }
+  }, 200);
+</script>
+{% endblock %}
+
+

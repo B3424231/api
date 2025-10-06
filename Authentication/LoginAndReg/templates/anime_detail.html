@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+
+{% block title %}Anime Details{% endblock %}
+
+{% block content %}
+
+<style>
+/* Anime Detail Page Styling */
+.anime-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.anime-cover-card {
+  border: none;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 15px 35px var(--shadow);
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--card-border);
+}
+
+.anime-cover-img {
+  width: 100%;
+  height: 500px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.anime-cover-card:hover .anime-cover-img {
+  transform: scale(1.02);
+}
+
+.anime-info-card {
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--card-border);
+  height: 100%;
+}
+
+.anime-info-body {
+  padding: 2rem;
+}
+
+/* Dashboard-style Text System */
+.anime-detail-title {
+  color: var(--text-primary) !important;
+  font-weight: 800;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.anime-detail-meta {
+  color: var(--text-secondary) !important;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.anime-detail-description {
+  color: var(--text-primary) !important;
+  line-height: 1.8;
+  font-size: 1rem;
+  text-align: justify;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.anime-ratings {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.anime-rating-badge {
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.score-badge {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.popularity-badge {
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.anime-nav-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.anime-nav-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.anime-back-btn {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: white !important;
+  border: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.anime-back-btn:hover {
+  background: linear-gradient(135deg, #4b5563, #6b7280);
+  color: white !important;
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+.anime-anilist-btn {
+  background: linear-gradient(135deg, #f3904f, #3b4371);
+  color: white !important;
+  border: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.anime-anilist-btn:hover {
+  background: linear-gradient(135deg, #3b4371, #f3904f);
+  color: white !important;
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .anime-detail-title {
+    font-size: 1.5rem;
+  }
+  
+  .anime-cover-img {
+    height: 400px;
+  }
+  
+  .anime-info-body {
+    padding: 1.5rem;
+  }
+  
+  .anime-nav-buttons {
+    flex-direction: column;
+  }
+  
+  .anime-ratings {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .anime-cover-img {
+    height: 350px;
+  }
+  
+  .anime-info-body {
+    padding: 1rem;
+  }
+  
+  .anime-detail-title {
+    font-size: 1.3rem;
+  }
+  
+  .anime-detail-meta {
+    font-size: 1rem;
+  }
+}
+</style>
+
+<div class="anime-detail-container">
+  <div class="anime-nav-buttons">
+    <a href="{% url 'anime' %}" class="anime-nav-btn anime-back-btn">
+      <i class="fa-solid fa-arrow-left"></i>Back to Anime
+    </a>
+    <a id="openAniList" href="#" target="_blank" class="anime-nav-btn anime-anilist-btn" style="display:none;">
+      <i class="fa-solid fa-up-right-from-square"></i>Open on AniList
+    </a>
+  </div>
+  
+  <div id="detailRoot" class="row g-4 align-items-start">
+    <div class="col-lg-4">
+      <div class="anime-cover-card">
+        <img id="coverImg" class="anime-cover-img" alt="Cover">
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <div class="anime-info-card">
+        <div class="anime-info-body">
+          <h3 id="title" class="anime-detail-title"></h3>
+          <div id="meta" class="anime-detail-meta"></div>
+          <div id="ratings" class="anime-ratings"></div>
+          <p id="description" class="anime-detail-description"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const animeId = parseInt("{{ anime_id }}");
+  async function fetchDetails(id) {
+    const body = {
+      query: `query ($id: Int) { Media(id: $id, type: ANIME) { id title { romaji english native } description(asHtml: false) coverImage { extraLarge large } bannerImage averageScore episodes popularity status season seasonYear duration genres } }`,
+      variables: { id }
+    };
+    const res = await fetch('https://graphql.anilist.co', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!res.ok) throw new Error('Failed to fetch details');
+    return res.json();
+  }
+  function escapeHtml(text){ return (text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function renderDetail(media) {
+    document.getElementById('coverImg').src = media.coverImage?.extraLarge || media.coverImage?.large || '';
+    const title = media.title.english || media.title.romaji || media.title.native || 'Untitled';
+    document.getElementById('title').textContent = title;
+    const info = [
+      media.status,
+      media.season && media.seasonYear ? `${media.season} ${media.seasonYear}` : null,
+      media.episodes ? `${media.episodes} episodes` : null,
+      media.duration ? `${media.duration} min/ep` : null,
+      media.genres && media.genres.length ? media.genres.join(', ') : null
+    ].filter(Boolean).join(' • ');
+    document.getElementById('meta').textContent = info;
+    const popularity = media.popularity ? `${(media.popularity / 1000).toFixed(1)}k` : 'N/A';
+    document.getElementById('ratings').innerHTML = `
+      <span class="anime-rating-badge score-badge">⭐ Score: ${media.averageScore ?? 'N/A'}</span>
+      <span class="anime-rating-badge popularity-badge">👥 Popularity: ${popularity}</span>
+    `;
+    const cleanDesc = escapeHtml(media.description).replace(/\n+/g,'\n');
+    document.getElementById('description').textContent = cleanDesc;
+  }
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const data = await fetchDetails(animeId);
+      renderDetail(data.data.Media);
+      const a = document.getElementById('openAniList');
+      a.href = `https://anilist.co/anime/${animeId}`;
+      a.style.display = 'inline-block';
+    } catch (e) {
+      document.getElementById('detailRoot').innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+    }
+  });
+</script>
+{% endblock %}

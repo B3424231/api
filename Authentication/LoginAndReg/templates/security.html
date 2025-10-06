@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Security{% endblock %}
+
+{% block content %}
+<div class="text-center mb-4">
+    <h2>Security</h2>
+    <p class="text-muted">Multi-factor status and login protection</p>
+    <div class="mb-3"><strong>MFA:</strong> {% if mfa_active %}Active{% else %}Disabled{% endif %}</div>
+    <div class="mb-3"><strong>Failed attempts:</strong> {{ failed_attempts }}</div>
+    {% if blocked_until %}
+    <div class="alert alert-warning">Blocked until {{ blocked_until }}</div>
+    {% endif %}
+</div>
+
+<div class="d-grid gap-2">
+    <a href="{% url 'setup_qr' %}" class="btn btn-outline-info">Manage QR / MFA</a>
+    <a href="{% url 'login' %}" class="btn btn-outline-secondary">Back to Login</a>
+{% endblock %}
+
+

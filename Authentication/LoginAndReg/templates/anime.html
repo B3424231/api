@@ -1,0 +1,717 @@
+{% extends 'base.html' %}
+
+{% block title %}Anime - AniList API{% endblock %}
+
+{% block content %}
+<style>
+/* Dashboard-style Theme System for Anime Page */
+.anime-card {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px var(--shadow);
+    height: 100%;
+    border: 1px solid var(--card-border);
+}
+
+/* Dark theme adjustments for cards */
+[data-theme="dark"] .anime-card {
+    background: rgba(26, 26, 46, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.anime-card:hover {
+    transform: translateY(-12px) scale(1.03);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
+                0 0 0 2px rgba(243, 144, 79, 0.6);
+    background: linear-gradient(135deg, 
+                rgba(243, 144, 79, 0.25) 0%, 
+                rgba(200, 118, 107, 0.22) 50%, 
+                rgba(59, 67, 113, 0.28) 100%);
+}
+
+.anime-card img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.anime-card:hover img {
+    transform: scale(1.05);
+}
+
+.anime-card-body {
+    padding: 1.25rem 1.25rem 2rem 1.25rem; /* ensure space below the button */
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem; /* natural spacing between sections */
+    min-height: 180px; /* allow body to grow */
+}
+
+/* Dashboard-style Text System */
+.anime-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary) !important;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.6rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.anime-meta {
+    font-size: 0.85rem;
+    color: var(--text-secondary) !important;
+    margin-bottom: 1rem;
+    flex-grow: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Light Theme Colors */
+.anime-score {
+    color: #10b981 !important;
+    font-weight: 700;
+    text-shadow: none;
+}
+
+.anime-episodes {
+    color: #3b82f6 !important;
+    font-weight: 700;
+    text-shadow: none;
+}
+
+.anime-meta .text-muted {
+    color: #9ca3af !important;
+    text-shadow: none;
+}
+
+/* Dark Theme Colors */
+[data-theme="dark"] .anime-score {
+    color: #4ade80 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .anime-episodes {
+    color: #60a5fa !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .anime-meta .text-muted {
+    color: rgba(255, 255, 255, 0.8) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.anime-btn {
+    background: linear-gradient(135deg, 
+                rgba(243, 144, 79, 0.9), 
+                rgba(59, 67, 113, 0.9));
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    color: white !important;
+    font-weight: 700;
+    padding: 0.9rem 1.25rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    text-align: center;
+    margin-top: auto;
+    /* extra outer space so the button doesn't touch the card edges */
+    margin-left: 0.75rem;
+    margin-right: 0.75rem;
+    margin-bottom: 0.75rem;
+    width: calc(100% - 1.5rem);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    backdrop-filter: blur(10px);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.anime-btn:hover {
+    background: linear-gradient(135deg, 
+                rgba(243, 144, 79, 1), 
+                rgba(59, 67, 113, 1));
+    transform: translateY(-2px) scale(1.01);
+    color: white !important;
+    text-decoration: none;
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Grid Layout Improvements */
+.anime-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    align-items: stretch;
+}
+
+@media (max-width: 768px) {
+    .anime-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.25rem;
+    }
+    
+    .anime-card img {
+        height: 250px;
+    }
+    
+    .anime-card-body {
+        height: 160px;
+        padding: 1.25rem;
+    }
+    
+    .anime-header h2 {
+        font-size: 2rem;
+    }
+    
+    .anime-header {
+        padding: 2rem 1.5rem;
+    }
+    
+    .anime-controls {
+        padding: 1.5rem;
+    }
+    
+    .anime-search-input,
+    .anime-select,
+    .anime-search-btn,
+    .anime-refresh-btn {
+        min-height: 45px;
+        font-size: 0.9rem;
+    }
+    
+    .anime-search-btn,
+    .anime-refresh-btn {
+        padding: 0.75rem 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .anime-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+    }
+    
+    .anime-card img {
+        height: 220px;
+    }
+    
+    .anime-card-body {
+        height: 140px;
+        padding: 1rem;
+    }
+    
+    .anime-title {
+        font-size: 0.9rem;
+    }
+    
+    .anime-search-input,
+    .anime-select,
+    .anime-search-btn,
+    .anime-refresh-btn {
+        min-height: 42px;
+        font-size: 0.85rem;
+    }
+    
+    .anime-search-btn,
+    .anime-refresh-btn {
+        padding: 0.625rem 1rem;
+    }
+}
+
+/* Dashboard-style Header */
+.anime-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 3rem 2rem;
+    background: var(--card-bg);
+    border-radius: 25px;
+    backdrop-filter: blur(25px);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 15px 35px var(--shadow);
+}
+
+[data-theme="dark"] .anime-header {
+    background: rgba(26, 26, 46, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.anime-header h2 {
+    color: var(--text-primary) !important;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    font-size: 2.5rem;
+}
+
+.anime-header p {
+    color: var(--text-secondary) !important;
+    font-size: 1.1rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Dashboard-style Controls */
+.anime-controls {
+    background: var(--card-bg);
+    backdrop-filter: blur(25px);
+    padding: 2rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    box-shadow: 0 15px 35px var(--shadow);
+    border: 1px solid var(--card-border);
+}
+
+[data-theme="dark"] .anime-controls {
+    background: rgba(26, 26, 46, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Light Theme Search Input */
+.anime-search-input {
+    border-radius: 12px 0 0 12px;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-right: none;
+    padding: 0.875rem 1.25rem;
+    background: rgba(255, 255, 255, 0.95);
+    color: #1f2937 !important;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    min-height: 50px;
+    font-size: 0.95rem;
+}
+
+.anime-search-input::placeholder {
+    color: rgba(31, 41, 55, 0.6) !important;
+    font-weight: 500;
+}
+
+.anime-search-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.3rem rgba(243, 144, 79, 0.2);
+    background: rgba(255, 255, 255, 1);
+    outline: none;
+    z-index: 2;
+    position: relative;
+}
+
+/* Dark Theme Search Input */
+[data-theme="dark"] .anime-search-input {
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-right: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .anime-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-theme="dark"] .anime-search-input:focus {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.anime-select {
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.9);
+    color: #2d3748 !important;
+    font-weight: 600;
+    padding: 0.875rem 1.25rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    min-height: 50px;
+    font-size: 0.95rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 3rem;
+}
+
+.anime-select:focus {
+    border-color: rgba(243, 144, 79, 0.8);
+    box-shadow: 0 0 0 0.3rem rgba(243, 144, 79, 0.2);
+    background: rgba(255, 255, 255, 1);
+    outline: none;
+}
+
+/* Button Styling */
+.anime-search-btn {
+    background: linear-gradient(135deg, #f3904f, #e8825d);
+    border: 2px solid rgba(243, 144, 79, 0.8);
+    border-left: none;
+    border-radius: 0 12px 12px 0;
+    color: #ffffff !important;
+    font-weight: 600;
+    padding: 0.875rem 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(243, 144, 79, 0.3);
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.anime-search-btn:hover {
+    background: linear-gradient(135deg, #e8825d, #f3904f);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(243, 144, 79, 0.4);
+    color: #ffffff !important;
+    border-color: rgba(243, 144, 79, 1);
+}
+
+.anime-refresh-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    color: #ffffff !important;
+    font-weight: 600;
+    padding: 0.875rem 1.5rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    min-height: 50px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.anime-refresh-btn:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(243, 144, 79, 0.6);
+    color: #f3904f !important;
+    transform: translateY(-2px);
+    text-shadow: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Dashboard-style Pagination */
+.anime-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: 3rem;
+    padding: 2rem;
+    background: var(--card-bg);
+    backdrop-filter: blur(25px);
+    border-radius: 20px;
+    box-shadow: 0 15px 35px var(--shadow);
+    border: 1px solid var(--card-border);
+}
+
+[data-theme="dark"] .anime-pagination {
+    background: rgba(26, 26, 46, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.anime-page-info {
+    font-weight: 700;
+    color: var(--text-primary) !important;
+    padding: 0 1rem;
+    font-size: 1.1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Pagination Button Styling */
+.anime-pagination .btn {
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.anime-pagination .btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--primary-color) !important;
+    border-color: rgba(243, 144, 79, 0.5);
+    transform: translateY(-2px);
+    text-shadow: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.anime-pagination .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Button disabled states */
+.anime-search-btn:disabled,
+.anime-refresh-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.anime-search-btn:disabled:hover,
+.anime-refresh-btn:disabled:hover {
+    transform: none !important;
+}
+
+/* Loading spinner styling */
+.anime-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.anime-loading .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3rem;
+    color: var(--primary-color);
+}
+
+.anime-loading p {
+    color: #ffffff !important;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    margin: 0;
+}
+</style>
+
+<div class="anime-header">
+    <h2><i class="fa-regular fa-circle-play me-2"></i>Anime Discovery</h2>
+    <p class="text-muted mb-0">Explore trending anime via AniList API</p>
+</div>
+
+<div class="anime-controls">
+    <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-stretch">
+        <div class="input-group" style="max-width: 640px;">
+            <input id="searchInput" class="anime-search-input form-control" placeholder="🔍 Search anime, characters, or studio" />
+            <button id="searchBtn" class="btn anime-search-btn">
+                <i class="fa-solid fa-magnifying-glass me-2"></i>Search
+            </button>
+        </div>
+        <div class="d-flex gap-2 align-items-stretch">
+            <select id="sortSelect" class="anime-select form-select">
+                <option value="TRENDING_DESC">📈 Trending</option>
+                <option value="POPULARITY_DESC">⭐ Most Popular</option>
+                <option value="SCORE_DESC">🏆 Top Rated</option>
+            </select>
+            <button id="refreshBtn" class="btn anime-refresh-btn">
+                <i class="fa-solid fa-rotate-right me-2"></i>Refresh
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="animeGrid" class="anime-grid"></div>
+
+<div class="anime-pagination">
+    <button id="prevPage" class="btn btn-outline-primary">
+        <i class="fa-solid fa-chevron-left me-2"></i>Previous
+    </button>
+    <span id="pageInfo" class="anime-page-info"></span>
+    <button id="nextPage" class="btn btn-outline-primary">
+        Next<i class="fa-solid fa-chevron-right ms-2"></i>
+    </button>
+</div>
+
+<script>
+  const grid = document.getElementById('animeGrid');
+  const pageInfo = document.getElementById('pageInfo');
+  const searchInput = document.getElementById('searchInput');
+  const searchBtn = document.getElementById('searchBtn');
+  const sortSelect = document.getElementById('sortSelect');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const prevBtn = document.getElementById('prevPage');
+  const nextBtn = document.getElementById('nextPage');
+
+  let currentPage = 1;
+  let hasNextPage = false;
+  let currentQuery = '';
+
+  async function fetchTrending(page = 1, perPage = 12, query = '', sort = 'TRENDING_DESC') {
+    // We can hit AniList directly for richer queries since our backend endpoint is fixed.
+    const body = {
+      query: `query ($search: String, $page: Int, $perPage: Int, $sort: [MediaSort]) {\n  Page(page: $page, perPage: $perPage) {\n    pageInfo {\n      total\n      currentPage\n      lastPage\n      hasNextPage\n      perPage\n    }\n    media(search: $search, type: ANIME, sort: $sort) {\n      id\n      title { romaji english }\n      coverImage { large medium }\n      bannerImage\n      averageScore\n      episodes\n      popularity\n    }\n  }\n}`,
+      variables: { search: query || null, page, perPage, sort: [sort] }
+    };
+
+    const res = await fetch('https://graphql.anilist.co', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('Failed to fetch from AniList');
+    return res.json();
+  }
+
+  function cardTemplate(anime) {
+    const title = anime.title.english || anime.title.romaji || 'Untitled';
+    const score = anime.averageScore ? `${anime.averageScore}%` : 'N/A';
+    const episodes = anime.episodes || '—';
+    const img = anime.coverImage?.large || anime.coverImage?.medium || '';
+    const popularity = anime.popularity ? `${(anime.popularity / 1000).toFixed(1)}k` : 'N/A';
+    
+    return `
+      <div class="anime-card">
+        <img src="${img}" alt="${title}" loading="lazy">
+        <div class="anime-card-body">
+          <h6 class="anime-title">${title}</h6>
+          <div class="anime-meta">
+            <span class="anime-score">⭐ ${score}</span> • 
+            <span class="anime-episodes">📺 ${episodes} ep</span><br>
+            <small class="text-muted">👥 ${popularity} fans</small>
+          </div>
+          <a href="/anime/${anime.id}/" class="anime-btn">
+            <i class="fa-solid fa-circle-info me-2"></i>View Details
+          </a>
+        </div>
+      </div>
+    `;
+  }
+
+  function render(data) {
+    const page = data.data.Page;
+    grid.innerHTML = page.media.map(cardTemplate).join('');
+    currentPage = page.pageInfo.currentPage;
+    hasNextPage = page.pageInfo.hasNextPage;
+    pageInfo.textContent = `Page ${currentPage} / ${page.pageInfo.lastPage}`;
+    prevBtn.disabled = currentPage <= 1;
+    nextBtn.disabled = !hasNextPage;
+  }
+
+  async function load(page = 1, recordSearch = false) {
+    try {
+      // Show loading state
+      setLoadingState(true);
+      
+      const sort = sortSelect.value;
+      const data = await fetchTrending(page, 12, currentQuery, sort);
+      render(data);
+      // Record ONLY user-initiated text searches
+      if (recordSearch && currentQuery && currentQuery.length > 0) {
+        try {
+          const pageInfoData = data?.data?.Page?.pageInfo;
+          const totalResults = pageInfoData?.total ?? (data?.data?.Page?.media?.length || 0);
+          const entry = {
+            query: currentQuery,
+            results: totalResults,
+            timestamp: new Date().toISOString()
+          };
+          const key = 'animeSearchHistory';
+          const existing = JSON.parse(localStorage.getItem(key) || '[]');
+          existing.unshift(entry);
+          if (existing.length > 50) existing.splice(50);
+          localStorage.setItem(key, JSON.stringify(existing));
+        } catch (e) {
+          // non-fatal: logging only
+          console.debug('Failed to record anime activity:', e);
+        }
+      }
+      
+      // Hide loading state
+      setLoadingState(false);
+    } catch (e) {
+      grid.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+      setLoadingState(false);
+    }
+  }
+  
+  function setLoadingState(isLoading) {
+    const buttons = [searchBtn, refreshBtn, prevBtn, nextBtn];
+    buttons.forEach(btn => {
+      if (isLoading) {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'not-allowed';
+      } else {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+      }
+    });
+    
+    if (isLoading) {
+      grid.innerHTML = `
+        <div class="anime-loading">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-3">🎌 Loading amazing anime...</p>
+        </div>
+      `;
+    }
+  }
+
+  // Wire up controls
+  searchBtn.addEventListener('click', () => { 
+    // Add click feedback
+    searchBtn.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      searchBtn.style.transform = '';
+    }, 150);
+    
+    currentQuery = searchInput.value.trim(); 
+    load(1, true); 
+  });
+  
+  // Add Enter key support for search
+  searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      currentQuery = searchInput.value.trim();
+      load(1, true);
+    }
+  });
+  
+  refreshBtn.addEventListener('click', () => {
+    // Add visual feedback
+    refreshBtn.style.transform = 'rotate(180deg)';
+    setTimeout(() => {
+      refreshBtn.style.transform = '';
+    }, 300);
+    load(currentPage, false);
+  });
+  
+  sortSelect.addEventListener('change', () => load(1, false));
+  
+  prevBtn.addEventListener('click', () => { 
+    if (currentPage > 1) {
+      load(currentPage - 1, false); 
+    }
+  });
+  
+  nextBtn.addEventListener('click', () => { 
+    if (hasNextPage) {
+      load(currentPage + 1, false); 
+    }
+  });
+
+  // Auto-load on page open
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('Anime page loaded, fetching initial data...');
+    load(1, false);
+  });
+</script>
+{% endblock %}
